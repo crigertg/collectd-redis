@@ -16,3 +16,7 @@
 
 # Go workspace file
 go.work
+
+# binary of this project
+collectd-redis
+collectd-redis.gz
