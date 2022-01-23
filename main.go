@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const version = "0.1.0"
+
 var collectdInterval = getCollectdInterval()
 var hostname = getHostname()
 
@@ -79,7 +81,11 @@ func redisMetrics(redisInstance redisInstance) {
 func main() {
 	args := os.Args[1:]
 	if len(args) != 1 {
-		log.Fatal("Exact one <name>:<host>:<port>[:<password>] must be given.")
+		log.Fatal("Exact one <name>:<host>:<port>[:<password>] must be given or `version`.")
+	}
+	if args[0] == "version" {
+		fmt.Println(version)
+		os.Exit(0)
 	}
 
 	redisInstance := parseArgToInstance(args[0])
