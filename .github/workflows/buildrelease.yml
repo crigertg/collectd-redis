@@ -24,8 +24,12 @@ jobs:
       - name: Build
         run: go build
 
+      - name: binversion
+        run: echo "::set-output name=binversion::$(./collectd-redis version)"
+        id: binversion
+
       - name: Test Version
-        run: test "$(./collectd-redis version)" = "${{ steps.version.outputs.version }}"
+        run: test ${{ steps.binversion.outputs.binversion }} = ${{ steps.version.outputs.version }}
 
       - name: Compress
         run: gzip collectd-redis
