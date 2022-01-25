@@ -54,11 +54,13 @@ func getHostname() string {
 }
 
 func getCollectdInterval() float64 {
-	coIn := os.Getenv("COLLECTD_INTERVAL")
-	if coIn == "" {
-		coIn = "10"
+	intervalFromEnv := os.Getenv("COLLECTD_INTERVAL")
+
+	if intervalFromEnv == "" {
+		intervalFromEnv = "10"
 	}
-	collectdInterval, err := strconv.ParseFloat(coIn, 64)
+
+	collectdInterval, err := strconv.ParseFloat(intervalFromEnv, 64)
 	errCheckFatal(err)
 	return collectdInterval
 }

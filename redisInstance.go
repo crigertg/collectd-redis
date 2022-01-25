@@ -49,10 +49,10 @@ func parseArgToInstance(connStr string) redisInstance {
 	}
 }
 
-func (reIn redisInstance) fetchInfo() (string, error) {
+func (instance redisInstance) fetchInfo() (string, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", reIn.host, reIn.port),
-		Password: reIn.pw,
+		Addr:     fmt.Sprintf("%s:%d", instance.host, instance.port),
+		Password: instance.pw,
 	})
 	output, err := client.Info().Result()
 	return output, err
