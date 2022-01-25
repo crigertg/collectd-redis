@@ -15,19 +15,20 @@ type redisMetric struct {
 	value float64
 }
 
-func generateUniqueMetrics(reIn string) []redisMetric {
+func generateUniqueMetrics(instanceName string) []redisMetric {
 	var metrics []redisMetric
-
 	// ensure that the map is always iterated in the same order
-	metrNams := make([]string, 0, len(uniqueMetricMap))
-	for k := range uniqueMetricMap {
-		metrNams = append(metrNams, k)
-	}
-	sort.Strings(metrNams)
+	metricNames := make([]string, 0, len(uniqueMetricMap))
 
-	for _, metrNam := range metrNams {
-		submNam := uniqueMetricMap[metrNam]
-		val, err := fetchMetricValue(reIn, metrNam)
+	for k := range uniqueMetricMap {
+		metricNames = append(metricNames, k)
+	}
+
+	sort.Strings(metricNames)
+
+	for _, metricName := range metricNames {
+		submNam := uniqueMetricMap[metricName]
+		val, err := fetchMetricValue(instanceName, metricName)
 
 		if err == nil {
 			metrics = append(metrics, redisMetric{
@@ -42,27 +43,28 @@ func generateUniqueMetrics(reIn string) []redisMetric {
 	return metrics
 }
 
-func fetchMetricValue(reIn string, metrNam string) (float64, error) {
-	scanner := bufio.NewScanner(strings.NewReader(reIn))
+func fetchMetricValue(instanceName string, metricName string) (float64, error) {
+	scanner := bufio.NewScanner(strings.NewReader(instanceName))
+
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if strings.HasPrefix(line, metrNam) {
+		if strings.HasPrefix(line, metricName) {
 			value, err := strconv.ParseFloat(strings.Split(line, ":")[1], 64)
 			errCheckFatal(err)
 
 			return value, nil
 		}
 	}
-	return 0, fmt.Errorf("metric %s not found", metrNam)
+	return 0, fmt.Errorf("metric %s not found", metricName)
 }
 
-func generateRecordsMetrics(reIn string) []redisMetric {
+func generateRecordsMetrics(instanceName string) []redisMetric {
 	var metrics []redisMetric
 	// group 1 is the db ID; group 2 is the number of keys (records)
 	re := regexp.MustCompile(`^db(\d+):keys=(\d+)`)
+	scanner := bufio.NewScanner(strings.NewReader(instanceName))
 
-	scanner := bufio.NewScanner(strings.NewReader(reIn))
 	for scanner.Scan() {
 		line := scanner.Text()
 		match := re.FindStringSubmatch(line)
@@ -81,7 +83,7 @@ func generateRecordsMetrics(reIn string) []redisMetric {
 	return metrics
 }
 
-func parsePutvalString(instance string, metric redisMetric) string {
+func parsePutvalString(instanceName string, metric redisMetric) string {
 	var submitValue string
 	if strings.Contains(metric.name, "ps_cputime") {
 		//redis returns decimal digits for CPU usage but collectd expects none
@@ -90,5 +92,5 @@ func parsePutvalString(instance string, metric redisMetric) string {
 		// only return the required decimal digitas and trim trailing 0s
 		submitValue = strconv.FormatFloat(metric.value, 'f', -1, 64)
 	}
-	return fmt.Sprintf("PUTVAL \"%s/redis-%s/%s\" interval=%f N:%s\n", hostname, instance, metric.name, collectdInterval, submitValue)
+	return fmt.Sprintf("PUTVAL \"%s/redis-%s/%s\" interval=%f N:%s\n", hostname, instanceName, metric.name, collectdInterval, submitValue)
 }
