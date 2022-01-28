@@ -10,7 +10,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
-const version = "v0.1.1"
+const version = "v0.1.2"
 
 var collectdInterval = getCollectdInterval()
 var hostname = getHostname()
