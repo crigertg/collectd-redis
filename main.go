@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
 const version = "v0.1.1"
@@ -65,8 +67,8 @@ func getCollectdInterval() float64 {
 	return collectdInterval
 }
 
-func redisMetrics(redisInstance redisInstance) {
-	info, err := redisInstance.fetchInfo()
+func redisMetrics(redisInstance redisInstance, redisClient *redis.Client) {
+	info, err := fetchRedisInfo(redisClient)
 	if err != nil {
 		log.Printf("Error when trying to fetch info from redis instance <%s>.\n", redisInstance.name)
 		log.Println(err)
@@ -91,9 +93,13 @@ func main() {
 	}
 
 	redisInstance := parseArgToInstance(args[0])
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", redisInstance.host, redisInstance.port),
+		Password: redisInstance.pw,
+	})
 
 	for {
-		redisMetrics(redisInstance)
+		redisMetrics(redisInstance, redisClient)
 		time.Sleep(time.Duration(collectdInterval) * time.Second)
 	}
 }
