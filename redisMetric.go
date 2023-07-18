@@ -15,7 +15,7 @@ type redisMetric struct {
 	value float64
 }
 
-func generateUniqueMetrics(instanceName string) []redisMetric {
+func generateUniqueMetrics(redisInfoOutput string) []redisMetric {
 	var metrics []redisMetric
 	// ensure that the map is always iterated in the same order
 	metricNames := make([]string, 0, len(uniqueMetricMap))
@@ -28,7 +28,7 @@ func generateUniqueMetrics(instanceName string) []redisMetric {
 
 	for _, metricName := range metricNames {
 		submNam := uniqueMetricMap[metricName]
-		val, err := fetchMetricValue(instanceName, metricName)
+		val, err := fetchMetricValue(redisInfoOutput, metricName)
 
 		if err == nil {
 			metrics = append(metrics, redisMetric{
@@ -43,8 +43,8 @@ func generateUniqueMetrics(instanceName string) []redisMetric {
 	return metrics
 }
 
-func fetchMetricValue(instanceName string, metricName string) (float64, error) {
-	scanner := bufio.NewScanner(strings.NewReader(instanceName))
+func fetchMetricValue(redisInfoOutput string, metricName string) (float64, error) {
+	scanner := bufio.NewScanner(strings.NewReader(redisInfoOutput))
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -59,11 +59,11 @@ func fetchMetricValue(instanceName string, metricName string) (float64, error) {
 	return 0, fmt.Errorf("metric %s not found", metricName)
 }
 
-func generateRecordsMetrics(instanceName string) []redisMetric {
+func generateRecordsMetrics(redisInfoOutput string) []redisMetric {
 	var metrics []redisMetric
 	// group 1 is the db ID; group 2 is the number of keys (records)
 	re := regexp.MustCompile(`^db(\d+):keys=(\d+)`)
-	scanner := bufio.NewScanner(strings.NewReader(instanceName))
+	scanner := bufio.NewScanner(strings.NewReader(redisInfoOutput))
 
 	for scanner.Scan() {
 		line := scanner.Text()
