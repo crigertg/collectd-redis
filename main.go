@@ -10,7 +10,8 @@ import (
 	"github.com/go-redis/redis"
 )
 
-const version = "v0.1.2"
+// Version sets the version of the built app for output
+var Version string
 
 var collectdInterval = getCollectdInterval()
 var hostname = getHostname()
@@ -88,7 +89,7 @@ func main() {
 		log.Fatal("Exact one <name>:<host>:<port>[:<password>] must be given or `version`.")
 	}
 	if args[0] == "version" {
-		fmt.Println(version)
+		fmt.Println(Version)
 		os.Exit(0)
 	}
 
