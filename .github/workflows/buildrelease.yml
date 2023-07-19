@@ -1,56 +1,35 @@
-name: Build and release a version
+name: Build Release
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  release:
+    types: [published]
 
 jobs:
   build:
     name: build
-    runs-on: ubuntu-20.04
-
+    runs-on: ubuntu-latest
     steps:
-      - name: version
-        run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
-        id: version
       - name: Set up 1.17.x
         uses: actions/setup-go@v2
         with:
           go-version: 1.17.x
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Build
-        run: go build
-
-      - name: binversion
-        run: echo "::set-output name=binversion::$(./collectd-redis version)"
-        id: binversion
-
-      - name: Test Version
-        run: test ${{ steps.binversion.outputs.binversion }} = ${{ steps.version.outputs.version }}
+        run: go build -ldflags "-X main.Version=${{ steps.semantic.outputs.new_release_git_tag }}"
 
       - name: Compress
         run: tar cfz collectd-redis_linux_x86_64.tar.gz collectd-redis
 
-      - name: release
-        uses: actions/create-release@v1
-        id: create_release
-        with:
-          draft: false
-          prerelease: false
-          release_name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ steps.version.outputs.version }}
-          body_path: CHANGELOG.md
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-      - name: upload linux artifact
+      - name: upload artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ github.event.release.upload_url }}
           asset_path: collectd-redis_linux_x86_64.tar.gz
           asset_name: collectd-redis_linux_x86_64.tar.gz
           asset_content_type: application/zip
+
+
