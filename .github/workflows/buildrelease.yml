@@ -1,7 +1,7 @@
 name: Build Release
 on:
   release:
-    types: [published]
+    types: [created, edited, published, released, prereleased]
 
 jobs:
   build:
@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build
-        run: go build -ldflags "-X main.Version=${{ steps.semantic.outputs.new_release_git_tag }}"
+        run: go build -ldflags "-X main.Version=${{ github.event.release.tag_name }}"
 
       - name: Compress
         run: tar cfz collectd-redis_linux_x86_64.tar.gz collectd-redis
