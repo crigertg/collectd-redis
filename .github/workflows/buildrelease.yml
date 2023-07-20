@@ -1,35 +1,51 @@
-name: Build Release
+name: Build and release a version
 on:
-  release:
-    types: [created, edited, published, released, prereleased]
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
-    name: build
+    name: release
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Set up 1.17.x
         uses: actions/setup-go@v2
         with:
           go-version: 1.17.x
 
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Build
-        run: go build -ldflags "-X main.Version=${{ github.event.release.tag_name }}"
+        if: steps.semantic.outputs.new_release_published == 'true'
+        run: go build -ldflags "-X main.Version=${{ steps.semantic.outputs.new_release_git_tag }}"
 
       - name: Compress
+        if: steps.semantic.outputs.new_release_published == 'true'
         run: tar cfz collectd-redis_linux_x86_64.tar.gz collectd-redis
 
-      - name: upload artifact
+      - id: get-release
+        uses: joutvhu/get-release@v1
+        with:
+          tag_name: ${{ steps.semantic.outputs.new_release_git_tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: upload linux artifact
+        if: steps.semantic.outputs.new_release_published == 'true'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: ${{ steps.get-release.outputs.upload_url }}
           asset_path: collectd-redis_linux_x86_64.tar.gz
-          asset_name: collectd-redis_linux_x86_64.tar.gz
+          asset_name: collectd-redis_linux_${{ steps.latest_release_info.outputs.tag_name }}_x86_64.tar.gz
           asset_content_type: application/zip
-
-
