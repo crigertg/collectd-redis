@@ -1,0 +1,23 @@
+{
+  "name": "collectd-redis",
+  "license": "MIT",
+  "devDependencies": {
+    "@semantic-release/github": "^8.0.7",
+    "git-cz": "^4.9.0",
+    "semantic-release": "^19.0.5"
+  },
+    "plugins": [
+        "@semantic-release/commit-analyzer",
+        "@semantic-release/release-notes-generator",
+        "@semantic-release/github",
+        "@semantic-release/npm", {
+            "npmPublish": false
+        }
+    ],
+  "private": true,
+  "release": {
+    "branches": [
+      "main", "master"
+    ]
+  }
+}
